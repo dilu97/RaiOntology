@@ -1,5 +1,6 @@
 //URL richieste Graphdb
-var urlGRAPHDB = 'http://localhost:8000/repositories/raiontology';
+//var urlGRAPHDB = 'http://localhost:8000/repositories/raiontology';
+var urlGRAPHDB = 'http://localhost:7200/repositories/raiontology';
 
 $(document).ready(function() {
     
@@ -27,10 +28,46 @@ function requestWikidata(label){
     });
 }
 
+function requestDbPedia(label){
+    //sparql query
+    var query = [
+        "SELECT ?item WHERE {",
+        "?item rdfs:label 'Che Dio ci aiuti'@en .",
+        "}  LIMIT 100"
+    ].join(" ");
+    //url for the query
+    var url = "http://dbpedia.org/sparql";
+    var queryUrl = url + "?query=" + encodeURIComponent(query);
+
+    $.ajax({
+        url: queryUrl,
+        data: {
+            format: 'json'
+        },
+        error: function() {
+            document.write("error");
+        },
+        dataType: 'json',
+        success: function(data) {
+            if (data.results.bindings.length > 0) {
+                for (var i = 0; i < data.results.bindings.length; i++) {
+                    var link = data.results.bindings[i].item.value;
+                    $("#dbPediaResults").append("\r\n<a href=" + link + ">Link " + (i+ 1) + "</a>");
+                }
+            }
+            else {
+                $("#dbPediaResults").append("No dbPedia results found");
+            }
+        },
+        type: 'GET'
+    });
+}
+
 /******************Query 1**********************************/
 
 function requestQ1(){
     $("#result").html("");
+    $("#dbPediaResults").html("");
     query = "PREFIX : <http://www.purl.org/ontologies/raiontology/> SELECT ?programma ?rating ?label WHERE {?programma a :Brand;rdfs:label ?label.?programma :ratingProgramme ?rating.}ORDER BY DESC(?rating)LIMIT 1";
     $.ajax(urlGRAPHDB, {headers: { Accept: 'application/sparql-results+json'},data: { query: query }}).then(function (data) {
         var res = data;
@@ -41,6 +78,7 @@ function requestQ1(){
             console.log(paesi[i].programma.value);
             $("#result").append("\n" + paesi[i].label.value + " - " + paesi[i].rating.value);
             requestWikidata(paesi[i].label.value);
+            requestDbPedia(paesi[i].label.value);
         }
     });        
 }
@@ -49,6 +87,7 @@ function requestQ1(){
 
 function prerequestQ7() {
     $("#result").html("");
+    $("#dbPediaResults").html("");
     //Prendo tutti i generi
     var query = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>PREFIX : <http://www.purl.org/ontologies/raiontology/> SELECT ?label ?genre WHERE{?genre a :Genre; rdfs:label ?label}";
     $.ajax(urlGRAPHDB, {headers:{ Accept: 'application/sparql-results+json'},data: { query: query }}).then(function (data) {
@@ -74,6 +113,7 @@ function requestQ7(){
         var generi = res.results.bindings;
         $("#result").append("\n" + generi[0].labelDirector.value + " - " + generi[0].max.value);
         requestWikidata(generi[0].labelDirector.value);
+        requestDbPedia(generi[0].labelDirector.value);
     });
 }
 
