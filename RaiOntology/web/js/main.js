@@ -1,12 +1,12 @@
 //URL richieste Graphdb
-//var urlGRAPHDB = 'http://localhost:8000/repositories/raiontology';
-var urlGRAPHDB = 'http://localhost:7200/repositories/raiontology';
+var urlGRAPHDB = 'http://localhost:8000/repositories/raiontology';
+//var urlGRAPHDB = 'http://localhost:7200/repositories/raiontology';
 
 $(document).ready(function() {
     
 });
 
-function requestWikidata(label){
+async function requestWikidata(label){
     var base = "https://query.wikidata.org/sparql?query=";
     var endpointUrl = "SELECT ?item WHERE {?item rdfs:label \""+ label + "\"@it.}",
 
@@ -22,8 +22,8 @@ function requestWikidata(label){
             var res = data;
             console.log(res.entities);
             //console.log(res.entities[id].sitelinks["itwiki"].url);
-            $("#result").append("\r\n<a href=" + res.entities[id].sitelinks["itwiki"].url + ">Wikipedia</a>");
-            $("#result").append("\r\n<a href=" + link + ">WikiData</a>");
+            $("#result").append("<a href=" + res.entities[id].sitelinks["itwiki"].url + ">Wikipedia</a>");
+            $("#result").append("<a href=" + link + ">WikiData</a>");
         });                
     });
 }
@@ -32,7 +32,7 @@ function requestDbPedia(label){
     //sparql query
     var query = [
         "SELECT ?item WHERE {",
-        "?item rdfs:label 'Che Dio ci aiuti'@en .",
+        "?item rdfs:label '" + label + "'@en .",
         "}  LIMIT 100"
     ].join(" ");
     //url for the query
@@ -49,6 +49,7 @@ function requestDbPedia(label){
         },
         dataType: 'json',
         success: function(data) {
+            console.log(JSON.stringify(data));
             if (data.results.bindings.length > 0) {
                 for (var i = 0; i < data.results.bindings.length; i++) {
                     var link = data.results.bindings[i].item.value;
@@ -83,6 +84,22 @@ function requestQ1(){
     });        
 }
 
+/************QUERY 4 *****************/
+function requestQ4() {
+    var query = "PREFIX prov: <http://www.w3.org/ns/prov#>PREFIX : <http://www.purl.org/ontologies/raiontology/>PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>SELECT ?labelActor (COUNT(?genre) AS ?numGeneri)WHERE {	SELECT DISTINCT ?labelActor ?genre	WHERE { 		?actor a :Person; rdfs:label ?labelActor.		?assoc prov:agent ?actor.		?assoc prov:hadRole ?role.		?activity prov:qualifiedAssociation ?role.		?episode prov:wasInfluencedBy ?activity.		?episode :hasGenre ?genre.		?role a :ActorRole.	}	ORDER BY ?labelActor ?genre}GROUP BY ?labelActor HAVING (?numGeneri > 1)ORDER BY ?numGeneri";
+    console.log(query);
+    $.ajax(urlGRAPHDB, {headers:{ Accept: 'application/sparql-results+json'},data: { query: query }}).then(function (data) {
+        var res = data;
+        var attori = res.results.bindings;
+        console.log(attori);
+        for(var i=0; i<attori.length; i++)
+        {
+            $("#result").append("\n" + attori[i].labelActor.value + " - " + attori[i].numGeneri.value+"</td>");
+            requestWikidata(attori[i].labelActor.value);
+            requestDbPedia(attori[i].labelActor.value);
+        }
+    });
+}
 /********QUERY 7******************/
 
 function prerequestQ7() {
