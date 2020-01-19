@@ -9,10 +9,13 @@ $(document).ready(function() {
         $(".alert").hide();
         $($(this).data("target")).toggle();
         
-        if(!$("#q7").is(":visible") && !$("#q9").is(":visible") && !$("#q10").is(":visible")) $("#dropdown").hide();
+        if(!$("#q7").is(":visible") && !$("#q9").is(":visible") && !$("#q10").is(":visible") && !$("#q5").is(":visible")) $("#dropdown").hide();
         else{
             $("#dropdown").show();
         }
+        
+        if(!$("#q5").is(":visible")) $("#data").hide();
+        else $("#data").show();
     });
     
     //Selezione su dropdown
@@ -23,6 +26,8 @@ $(document).ready(function() {
             requestQ9(this.text);
         if($("#q10").is(":visible"))
             requestQ10(this.text);
+        if($("#q5").is(":visible"))
+            requestQ5(this.text);
     });
 });
 
@@ -140,7 +145,6 @@ function requestQ3(){
 /************QUERY 4 *****************/
 function requestQ4() {
     var query = "PREFIX prov: <http://www.w3.org/ns/prov#>PREFIX : <http://www.purl.org/ontologies/raiontology/>PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>SELECT ?labelActor (COUNT(?genre) AS ?numGeneri)WHERE {	SELECT DISTINCT ?labelActor ?genre	WHERE { 		?actor a :Person; rdfs:label ?labelActor.		?assoc prov:agent ?actor.		?assoc prov:hadRole ?role.		?activity prov:qualifiedAssociation ?role.		?episode prov:wasInfluencedBy ?activity.		?episode :hasGenre ?genre.		?role a :ActorRole.	}	ORDER BY ?labelActor ?genre}GROUP BY ?labelActor HAVING (?numGeneri > 1)ORDER BY ?numGeneri";
-    console.log(query);
     $.ajax(urlGRAPHDB, {headers:{ Accept: 'application/sparql-results+json'},data: { query: query }}).then(function (data) {
         var res = data;
         var attori = res.results.bindings;
@@ -154,6 +158,68 @@ function requestQ4() {
         
     });
 }
+
+/********QUERY 5******************/
+
+function prerequestQ5() {
+    //Prendo tutti i generi
+    $("#dropdown li").remove();
+    $("#data").removeAttr("hidden");
+    var query = "PREFIX : <http://www.purl.org/ontologies/raiontology/> " +
+                "SELECT distinct ?paese " +
+                "WHERE {" +
+                "	?programma a :Brand; " +
+                "		:country ?paese." +
+                "}";
+
+    $.ajax(urlGRAPHDB, {headers:{ Accept: 'application/sparql-results+json'},data: { query: query }}).then(function (data) {
+        var res = data;
+        console.log(res);
+        var paesi = res.results.bindings;
+        $("#dropdownText").text("Generi");
+        for(var i = 0; i < paesi.length; i++)
+        {
+            $("#dropdown .dropdown-menu").append("<li><a id="+ paesi[i].paese.value+" href=\"#\">"+ paesi[i].paese.value + "</a></li>");
+        }
+        $("#dropdown").removeAttr("hidden");
+    });
+}
+
+function requestQ5(paese){
+    //query 5
+    var anno = $("#data").val();
+    if(anno != "")
+    {
+        $("#data").hide();
+        var query = "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> " +
+                    "PREFIX : <http://www.purl.org/ontologies/raiontology/> " +
+                    "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
+                    "SELECT ?programma ?rating ?label " +
+                    "WHERE {" +
+                    "	?programma a :Brand; " +
+                    "		:yearProgramme ?anno;" +
+                    "		:country ?paese; rdfs:label ?label." +
+                    "	?programma :ratingProgramme ?rating." +
+                    "	FILTER regex(?paese, \"" + paese +"\") " +
+                    "	FILTER (?anno=\"" + anno + "\"^^xsd:positiveInteger) " +
+                    "}" +
+                    "order by desc(?rating) ";
+        $.ajax(urlGRAPHDB, {headers:{ Accept: 'application/sparql-results+json'},data: { query: query }}).then(function (data) {
+            var res = data;
+            var programmi = res.results.bindings;
+            console.log(programmi);
+            for(var i = 0; i < programmi.length; i++) {
+                $("#tabResult").append("<tr><td id=\"" +programmi[i].label.value.replace(/\s/g, '') + "\">"  + programmi[i].label.value + "</td><td>" + programmi[i].rating.value+"</td><td id=\"" + programmi[i].label.value.replace(/\s/g, '') + "WK\"></td><td id=\"" + programmi[i].label.value.replace(/\s/g, '') + "WD\"> </td><td id=\"" + programmi[i].label.value.replace(/\s/g, '') + "DP\"></td></tr>");
+                requestWikidata(programmi[i].label.value);
+                requestDbPedia(programmi[i].label.value);
+            }
+        });
+    }
+    else{
+        alert("Inserisci anno!");
+    }
+}
+
 /************QUERY 6 *****************/
 function requestQ6() {
     var query = [
@@ -256,7 +322,7 @@ function requestQ9(regista){
     });
 }
 
-/********QUERY 7******************/
+/********QUERY 10******************/
 
 function prerequestQ10() {
     //Prendo tutti i generi
@@ -310,7 +376,6 @@ function requestQ10(genere){
     ].join("\n"); 
     
     $.ajax(urlGRAPHDB, {headers:{ Accept: 'application/sparql-results+json'},data: { query: query }}).then(function (data) {
-        
         var res = data;
         var film = res.results.bindings;
         for(var i = 0; i < film.length; i++) {
