@@ -9,7 +9,7 @@ $(document).ready(function() {
         $(".alert").hide();
         $($(this).data("target")).toggle();
         
-        if(!$("#q7").is(":visible") && !$("#q9").is(":visible")) $("#dropdown").hide();
+        if(!$("#q7").is(":visible") && !$("#q9").is(":visible") && !$("#q10").is(":visible")) $("#dropdown").hide();
         else{
             $("#dropdown").show();
         }
@@ -21,6 +21,8 @@ $(document).ready(function() {
             requestQ7(this.id);
         if($("#q9").is(":visible"))
             requestQ9(this.text);
+        if($("#q10").is(":visible"))
+            requestQ10(this.text);
     });
 });
 
@@ -152,6 +154,40 @@ function requestQ4() {
         
     });
 }
+/************QUERY 6 *****************/
+function requestQ6() {
+    var query = [
+        "PREFIX prov: <http://www.w3.org/ns/prov#>",
+        "PREFIX : <http://www.purl.org/ontologies/raiontology/>",
+        "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>",
+        "SELECT ?labelDirector (SUM(?rating) AS ?sommaRating)  WHERE {",
+           "?director a :Person.", 
+           "?director rdfs:label ?labelDirector.",
+           "?assoc prov:agent ?director.", 
+           "?assoc prov:hadRole ?role.", 
+           "?activity prov:qualifiedAssociation ?role.", 
+           "?programme prov:wasInfluencedBy ?activity.", 
+           "?programme :ratingProgramme ?rating.", 
+           "?role a :DirectorRole.", 
+         "}", 
+        "GROUP BY ?labelDirector", 
+        "ORDER BY DESC(?sommaRating)",
+        "LIMIT 5"
+    ].join(" ");      
+
+    $.ajax(urlGRAPHDB, {headers:{ Accept: 'application/sparql-results+json'},data: { query: query }}).then(function (data) {
+        
+        var res = data;
+        var registi = res.results.bindings;
+        for(var i=0; i<registi.length; i++)
+        {
+            $("#tabResult").append("<tr><td id=\"" +registi[i].labelDirector.value.replace(/\s/g, '') + "\">"  + registi[i].labelDirector.value + "</td><td>" + registi[i].sommaRating.value+"</td><td id=\"" + registi[i].labelDirector.value.replace(/\s/g, '') + "WK\"></td><td id=\"" + registi[i].labelDirector.value.replace(/\s/g, '') + "WD\"> </td><td id=\"" + registi[i].labelDirector.value.replace(/\s/g, '') + "DP\"></td></tr>");
+            requestWikidata(registi[i].labelDirector.value);
+            requestDbPedia(registi[i].labelDirector.value);
+        }
+        
+    });
+}
 /********QUERY 7******************/
 
 function prerequestQ7() {
@@ -217,5 +253,71 @@ function requestQ9(regista){
             requestWikidata(programmi[i].labelProgramme.value);
             requestDbPedia(programmi[i].labelProgramme.value);
         }
+    });
+}
+
+/********QUERY 7******************/
+
+function prerequestQ10() {
+    //Prendo tutti i generi
+    $("#dropdown li").remove();
+    var query = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>PREFIX : <http://www.purl.org/ontologies/raiontology/> SELECT ?label ?genre WHERE{?genre a :Genre; rdfs:label ?label}";
+    $.ajax(urlGRAPHDB, {headers:{ Accept: 'application/sparql-results+json'},data: { query: query }}).then(function (data) {
+        var res = data;
+        console.log(res);
+        var generi = res.results.bindings;
+        $("#dropdownText").text("Generi");
+        for(var i = 0; i < generi.length; i++)
+        {
+            $("#dropdown .dropdown-menu").append("<li><a id="+ generi[i].label.value+" href=\"#\">"+ generi[i].label.value + "</a></li>");
+        }
+        $("#dropdown").removeAttr("hidden");
+    });
+}
+
+function requestQ10(genere){
+    //query 10
+    var query = [
+      "PREFIX prov: <http://www.w3.org/ns/prov#>",
+      "PREFIX : <http://www.purl.org/ontologies/raiontology/>",
+      "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>",
+
+      "SELECT ?labelGenre ?labelProgramme ?rating WHERE {",
+        "{",
+          "SELECT DISTINCT ?labelProgramme ?labelGenre ?rating WHERE {",
+            "?episode :hasGenre ?genre.",
+            "?series :hasEpisode ?episode.",
+            "?programme :hasSeries ?series.",
+            "?programme :ratingProgramme ?rating.",
+            "?genre rdfs:label ?labelGenre.",
+            "?programme rdfs:label ?labelProgramme.",
+            "FILTER (?labelGenre = '" + genere + "')",
+          "}",
+        "}",
+        "{",
+          "SELECT (MAX(?rating2) AS ?maxRating) WHERE {",
+            "?episode2 :hasGenre ?genre2.",
+            "?series2 :hasEpisode ?episode2.",
+            "?programme2 :hasSeries ?serie2.",
+            "?programme2:ratingProgramme ?rating2.",
+            "?genre2 rdfs:label ?labelGenre2.",
+            "?programme2 rdfs:label ?labelProgramme2.",
+            "FILTER (?labelGenre2 = '"+ genere + "')",
+        "}",
+      "}",
+      "FILTER (?rating = ?maxRating)",
+      "}"
+    ].join("\n"); 
+    
+    $.ajax(urlGRAPHDB, {headers:{ Accept: 'application/sparql-results+json'},data: { query: query }}).then(function (data) {
+        
+        var res = data;
+        var film = res.results.bindings;
+        for(var i = 0; i < film.length; i++) {
+            $("#tabResult").append("<tr><td id=\"" +film[i].labelProgramme.value.replace(/\s/g, '') + "\">"  + film[i].labelProgramme.value + "</td><td>" + film[i].rating.value+"</td><td id=\"" + film[i].labelProgramme.value.replace(/\s/g, '') + "WK\"></td><td id=\"" + film[i].labelProgramme.value.replace(/\s/g, '') + "WD\"> </td><td id=\"" + film[i].labelProgramme.value.replace(/\s/g, '') + "DP\"></td></tr>");
+            requestWikidata(film[i].labelProgramme.value);
+            requestDbPedia(film[i].labelProgramme.value);
+        }
+        
     });
 }
