@@ -39,7 +39,7 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarResponsive">
-        <ul class="navbar-nav ml-auto">
+        <!--<ul class="navbar-nav ml-auto">
           <li class="nav-item">
             <a class="nav-link js-scroll-trigger" href="#about">About</a>
           </li>
@@ -49,7 +49,7 @@
           <li class="nav-item">
             <a class="nav-link js-scroll-trigger" href="#contact">Contact</a>
           </li>
-        </ul>
+        </ul>-->
       </div>
     </div>
   </nav>
@@ -61,24 +61,33 @@
     </div>
   </header>
 
-  <section id="about">
+  <section id="about" style="padding-top: 10px">
     <div class="container">
       <div class="row">
         <div class="col-lg-8 mx-auto">
-          <h2>Richieste SPARQL</h2>
+          <h2>Query SPARQL</h2>
+          <div class="btn-group" id="groupBtnQuery">
+            <button type="button" data-toggle="collapse" data-target="#q1" class="btn btn-primary" onclick="requestQ1()">1</button>
+            <button type="button" data-toggle="collapse" data-target="#q2" class="btn btn-primary" onclick="requestQ2()">2</button>
+            <button type="button" data-toggle="collapse" data-target="#q3" class="btn btn-primary" onclick="requestQ3()">3</button>
+            <button type="button" data-toggle="collapse" data-target="#q4" class="btn btn-primary" onclick="requestQ4()">4</button>
+            <button type="button" class="btn btn-primary" data-target="#q7" onclick="prerequestQ7()">7</button>
+            <button type="button" class="btn btn-primary" data-target="#q9" onclick="prerequestQ9()">9</button>
+          </div>
+          <div id="q1" class="alert alert-info collapse">Programmi con rating più alto</div>
+          <div id="q2" class="alert alert-info collapse">Programma con più episodi</div>
+          <div id="q3" class="alert alert-info collapse">Attori che hanno recitato più episodi</div>
+          <div id="q4" class="alert alert-info collapse">Attori che hanno recitato in episodi di genere diverso</div>
+          <div id="q7" class="alert alert-info collapse">Dato un genere, trovare il regista migliore</div>
+          <div id="q9" class="alert alert-info collapse">Dato un regista, trovare i suoi film migliori</div>
+          <div class="dropdown" id="dropdown" hidden>
+            <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" id="dropdownText"><span class="caret"></span></button>
+            <ul class="dropdown-menu"></ul>
+          </div>
           
-          <button type="button" onclick="requestQ1()">Programma rating più alto</button>
-          <button type="button" onclick="prerequestQ7()">Miglior Regista di un genere</button>
-          <button type="button" onclick="requestQ4()">Attori Poli-genere</button>
-          <select id="generi" hidden></select><button type="button" id="btnQ7" onclick="requestQ7()" hidden>OK</button>
           <div id="result"> 
           </div>
           
-          
-          <br/>
-           DbPedia results:
-          <div id="dbPediaResults"> 
-          </div>
         </div>
       </div>
     </div>
@@ -122,7 +131,7 @@
   <!-- Footer -->
   <footer class="py-5 bg-dark">
     <div class="container">
-      <p class="m-0 text-center text-white">Copyright &copy; Your Website 2019</p>
+      <p class="m-0 text-center text-white">Davide Di Luccio & Davide Rubinetti</p>
     </div>
     <!-- /.container -->
   </footer>
