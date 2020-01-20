@@ -1,6 +1,14 @@
 //URL richieste Graphdb
 //var urlGRAPHDB = 'http://localhost:8000/repositories/raiontology';
 var urlGRAPHDB = 'http://localhost:7200/repositories/raiontology';
+var prefixes = [
+    "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
+    "PREFIX owl: <http://www.w3.org/2002/07/owl#>",
+    "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>",
+    "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>",
+    "PREFIX prov: <http://www.w3.org/ns/prov#>",
+    "PREFIX : <http://www.purl.org/ontologies/raiontology/>",
+];
 
 $(document).ready(function() {
     $("#groupBtnQuery .btn").click(function(){
@@ -29,6 +37,13 @@ $(document).ready(function() {
         if($("#q5").is(":visible"))
             requestQ5(this.text);
     });
+    
+    
+    for (var i = 0; i < prefixes.length; i++) {
+        $("#txtSparqlQuery").text($("#txtSparqlQuery").text() + prefixes[i] + "\r\n");
+    //console.log($("#txtSparqlQuery").html());
+    }
+
 });
 
 function requestWikidata(label){
@@ -385,4 +400,41 @@ function requestQ10(genere){
         }
         
     });
+}
+
+/***** sparql ******/
+function sparqlQuery() {;
+    var query = $("#txtSparqlQuery").val();
+    $.ajax({
+        url: urlGRAPHDB,
+        data: { query: query  },
+        headers:{ Accept: 'application/sparql-results+json'},
+        success: function(data) {
+            $("#tabResult").html("");
+            var results = data.results.bindings;
+            if (results.length > 0) {
+                var keys = Object.keys(results[0]);
+
+                $("#tabResult").append("<tr>");
+                for (var i = 0; i < keys.length; i++) {
+                    $("#tabResult").append("<th>" + keys[i] + "</th>");
+                }
+                $("#tabResult").append("</tr>");
+
+                for(var i = 0; i < results.length; i++) {
+                    $("#tabResult").append("<tr>");
+                    for (var j = 0; j < keys.length; j++) {
+                        var key = keys[j];
+                        $("#tabResult").append("<td>" + results[i][key].value + "</td>");
+                    }
+                    $("#tabResult").append("</tr>");
+                }
+            }
+        },
+        error: function(error) {
+            alert(error.responseText);
+        },
+        type: 'GET'
+    });
+    
 }
