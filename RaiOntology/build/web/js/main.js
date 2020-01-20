@@ -17,7 +17,7 @@ $(document).ready(function() {
         $(".alert").hide();
         $($(this).data("target")).toggle();
         
-        if(!$("#q7").is(":visible") && !$("#q9").is(":visible") && !$("#q10").is(":visible") && !$("#q5").is(":visible")) $("#dropdown").hide();
+        if(!$("#q7").is(":visible") && !$("#q8").is(":visible") && !$("#q9").is(":visible") && !$("#q10").is(":visible") && !$("#q5").is(":visible")) $("#dropdown").hide();
         else{
             $("#dropdown").show();
         }
@@ -36,6 +36,8 @@ $(document).ready(function() {
             requestQ10(this.text);
         if($("#q5").is(":visible"))
             requestQ5(this.text);
+        if($("#q8").is(":visible"))
+            requestQ8(this.text);
     });
     
     
@@ -191,7 +193,7 @@ function prerequestQ5() {
         var res = data;
         console.log(res);
         var paesi = res.results.bindings;
-        $("#dropdownText").text("Generi");
+        $("#dropdownText").text("Paesi");
         for(var i = 0; i < paesi.length; i++)
         {
             $("#dropdown .dropdown-menu").append("<li><a id="+ paesi[i].paese.value+" href=\"#\">"+ paesi[i].paese.value + "</a></li>");
@@ -202,6 +204,8 @@ function prerequestQ5() {
 
 function requestQ5(paese){
     //query 5
+    $("#result").html("");
+    $("#result").append("<table id=\"tabResult\" class=\"table\"></table>");
     var anno = $("#data").val();
     if(anno != "")
     {
@@ -274,7 +278,16 @@ function requestQ6() {
 function prerequestQ7() {
     //Prendo tutti i generi
     $("#dropdown li").remove();
-    var query = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>PREFIX : <http://www.purl.org/ontologies/raiontology/> SELECT ?label ?genre WHERE{?genre a :Genre; rdfs:label ?label}";
+    //var query = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>PREFIX : <http://www.purl.org/ontologies/raiontology/> SELECT ?label ?genre WHERE{?genre a :Genre; rdfs:label ?label}";
+    var query = "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> " +
+                "PREFIX : <http://www.purl.org/ontologies/raiontology/> " +
+                "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
+                "PREFIX prov: <http://www.w3.org/ns/prov#> " +
+                "SELECT distinct ?label " +
+                "  WHERE { " +
+                "    ?genre a :Genre;rdfs:label ?label. " +
+                "    [] :hasGenre ?genre. " +
+                "} ";
     $.ajax(urlGRAPHDB, {headers:{ Accept: 'application/sparql-results+json'},data: { query: query }}).then(function (data) {
         var res = data;
         console.log(res);
@@ -290,6 +303,8 @@ function prerequestQ7() {
 
 function requestQ7(genere){
     //query 7
+    $("#result").html("");
+    $("#result").append("<table id=\"tabResult\" class=\"table\"></table>");
     var query = "PREFIX prov: <http://www.w3.org/ns/prov#>PREFIX : <http://www.purl.org/ontologies/raiontology/>PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>SELECT distinct ?director ?sum ?label WHERE{ 	{SELECT ?director (SUM(?rating) AS ?sum) 	WHERE { 		?director a :Person.		?assoc prov:agent ?director.		?assoc prov:hadRole ?role.		?role a :DirectorRole. 		?activity prov:qualifiedAssociation ?role.		?programme prov:wasInfluencedBy ?activity.		?genre :nameGenre \""+ genere + "\"^^xsd:string.		?programme :hasSeries ?series.		?series :hasEpisode ?episode.		?episode :hasGenre ?genre.		?programme :ratingProgramme ?rating.	}    	GROUP BY ?director}    {SELECT ?director1 (SUM(?rating) AS ?sum2) 	WHERE {		?director1 a :Person.		?assoc prov:agent ?director1.		?assoc prov:hadRole ?role.		?role a :DirectorRole.		?activity prov:qualifiedAssociation ?role.		?programme prov:wasInfluencedBy ?activity.		?genre :nameGenre \""+ genere + "\"^^xsd:string.		?programme :hasSeries ?series.		?series :hasEpisode ?episode.		?episode :hasGenre ?genre.		?programme :ratingProgramme ?rating.	}    GROUP BY ?director1}     {?director rdfs:label ?label}FILTER (?sum>?sum2)}";
     $.ajax(urlGRAPHDB, {headers:{ Accept: 'application/sparql-results+json'},data: { query: query }}).then(function (data) {
         var res = data;
@@ -301,6 +316,92 @@ function requestQ7(genere){
         }
     });
 }
+
+/********QUERY 8******************/
+
+function prerequestQ8() {
+    //Prendo tutti i generi
+    $("#dropdown li").remove();
+    var query = "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> " +
+                "PREFIX : <http://www.purl.org/ontologies/raiontology/> " +
+                "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
+                "PREFIX prov: <http://www.w3.org/ns/prov#> " +
+                "SELECT distinct ?label " +
+                "  WHERE { " +
+                "    ?genre a :Genre;rdfs:label ?label. " +
+                "    [] :hasGenre ?genre. " +
+                "} ";
+
+    $.ajax(urlGRAPHDB, {headers:{ Accept: 'application/sparql-results+json'},data: { query: query }}).then(function (data) {
+        var res = data;
+        console.log(res);
+        var generi = res.results.bindings;
+        $("#dropdownText").text("Generi");
+        for(var i = 0; i < generi.length; i++)
+        {
+            $("#dropdown .dropdown-menu").append("<li><a id="+ generi[i].label.value+" href=\"#\">"+ generi[i].label.value + "</a></li>");
+        }
+        $("#dropdown").removeAttr("hidden");
+    });
+}
+
+function requestQ8(genere){
+    //query 8
+    $("#result").html("");
+    $("#result").append("<table id=\"tabResult\" class=\"table\"></table>");
+    var query = "PREFIX prov: <http://www.w3.org/ns/prov#> " +
+                "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> " +
+                "PREFIX : <http://www.purl.org/ontologies/raiontology/> " +
+                "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
+                "SELECT ?actor ?max ?labelActor " +
+                "WHERE { " +
+                "	{ " +
+                "        SELECT ?actor ?labelActor (COUNT(?episode) AS ?sum)  " +
+                "        WHERE { " +
+                "            ?actor a :Person; rdfs:label ?labelActor. " +
+                "            ?assoc prov:agent ?actor. " +
+                "            ?assoc prov:hadRole ?role. " +
+                "            ?role a :ActorRole.  " +
+                "            ?activity prov:qualifiedAssociation ?role.   " +
+                "            ?episode prov:wasInfluencedBy ?activity. " +
+                "            ?genre :nameGenre \"Commedia\"^^xsd:string. " +
+                "            ?episode :hasGenre ?genre. " +
+                "            ?episode a :Episode " +
+                "        } " +
+                "		GROUP BY ?actor ?labelActor " +
+                "    } " +
+                "	{ " +
+                "	SELECT (MAX(?sum1) as ?max) " +
+                "    WHERE { " +
+                "		SELECT ?actor2 (COUNT(?episode) AS ?sum1)  " +
+                "		WHERE { " +
+                "            ?actor2 a :Person.  " +
+                "            ?assoc prov:agent ?actor2. " +
+                "            ?assoc prov:hadRole ?role. " +
+                "            ?role a :ActorRole.  " +
+                "            ?activity prov:qualifiedAssociation ?role.   " +
+                "            ?episode prov:wasInfluencedBy ?activity. " +
+                "            ?genre :nameGenre \"Commedia\"^^xsd:string. " +
+                "            ?episode :hasGenre ?genre. " +
+                "            ?episode a :Episode " +
+                "        	} " +
+                "        GROUP BY ?actor2 " +
+                "		} " +
+                "	} " +
+                "	FILTER (?sum=?max) " +
+                "} ";
+    console.log(query);
+    $.ajax(urlGRAPHDB, {headers:{ Accept: 'application/sparql-results+json'},data: { query: query }}).then(function (data) {
+        var res = data;
+        var registi = res.results.bindings;
+        for(var i = 0; i < registi.length; i++) {
+            $("#tabResult").append("<tr><td id=\"" +registi[i].labelActor.value.replace(/\s/g, '') + "\">"  + registi[i].labelActor.value + "</td><td>" + registi[i].max.value+"</td><td id=\"" + registi[i].labelActor.value.replace(/\s/g, '') + "WK\"></td><td id=\"" + registi[i].labelActor.value.replace(/\s/g, '') + "WD\"> </td><td id=\"" + registi[i].labelActor.value.replace(/\s/g, '') + "DP\"></td></tr>");
+            requestWikidata(registi[i].labelActor.value);
+            requestDbPedia(registi[i].labelActor.value);
+        }
+    });
+}
+
 
 /********QUERY 9******************/
 
@@ -323,6 +424,8 @@ function prerequestQ9() {
 
 function requestQ9(regista){
     //query 9
+    $("#result").html("");
+    $("#result").append("<table id=\"tabResult\" class=\"table\"></table>");
     var query = "PREFIX prov: <http://www.w3.org/ns/prov#> PREFIX : <http://www.purl.org/ontologies/raiontology/> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> SELECT ?director ?label ?rating ?labelProgramme WHERE {	{SELECT ?director ?label ?rating ?programme ?labelProgramme	WHERE {        ?director a :Person; rdfs:label ?label.        ?assoc prov:agent ?director.        ?assoc prov:hadRole ?role.        ?activity prov:qualifiedAssociation ?role.        ?programme prov:wasInfluencedBy ?activity; rdfs:label ?labelProgramme.        ?programme :ratingProgramme ?rating.        ?role a :DirectorRole.        FILTER (?label=\"" + regista + "\")}    }    {SELECT (MAX(?rat) as ?max)        WHERE {            ?director2 a :Person; rdfs:label ?label2.            ?assoc prov:agent ?director2.            ?assoc prov:hadRole ?role.            ?activity prov:qualifiedAssociation ?role.            ?programme2 prov:wasInfluencedBy ?activity.            ?programme2 :ratingProgramme ?rat.            ?role a :DirectorRole.            FILTER (?label2=\"" + regista + "\")}    } FILTER (?rating = ?max)}";
     console.log(query);
     $.ajax(urlGRAPHDB, {headers:{ Accept: 'application/sparql-results+json'},data: { query: query }}).then(function (data) {
@@ -342,7 +445,16 @@ function requestQ9(regista){
 function prerequestQ10() {
     //Prendo tutti i generi
     $("#dropdown li").remove();
-    var query = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>PREFIX : <http://www.purl.org/ontologies/raiontology/> SELECT ?label ?genre WHERE{?genre a :Genre; rdfs:label ?label}";
+    //var query = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>PREFIX : <http://www.purl.org/ontologies/raiontology/> SELECT ?label ?genre WHERE{?genre a :Genre; rdfs:label ?label}";
+    var query = "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> " +
+                "PREFIX : <http://www.purl.org/ontologies/raiontology/> " +
+                "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
+                "PREFIX prov: <http://www.w3.org/ns/prov#> " +
+                "SELECT distinct ?label " +
+                "  WHERE { " +
+                "    ?genre a :Genre;rdfs:label ?label. " +
+                "    [] :hasGenre ?genre. " +
+                "} ";
     $.ajax(urlGRAPHDB, {headers:{ Accept: 'application/sparql-results+json'},data: { query: query }}).then(function (data) {
         var res = data;
         console.log(res);
@@ -358,6 +470,8 @@ function prerequestQ10() {
 
 function requestQ10(genere){
     //query 10
+    $("#result").html("");
+    $("#result").append("<table id=\"tabResult\" class=\"table\"></table>");
     var query = [
       "PREFIX prov: <http://www.w3.org/ns/prov#>",
       "PREFIX : <http://www.purl.org/ontologies/raiontology/>",
