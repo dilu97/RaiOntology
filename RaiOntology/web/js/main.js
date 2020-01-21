@@ -302,10 +302,11 @@ function prerequestQ7() {
 }
 
 function requestQ7(genere){
-    //query 7
+    //query 7    
     $("#result").html("");
     $("#result").append("<table id=\"tabResult\" class=\"table\"></table>");
     var query = "PREFIX prov: <http://www.w3.org/ns/prov#>PREFIX : <http://www.purl.org/ontologies/raiontology/>PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>SELECT distinct ?director ?sum ?label WHERE{ 	{SELECT ?director (SUM(?rating) AS ?sum) 	WHERE { 		?director a :Person.		?assoc prov:agent ?director.		?assoc prov:hadRole ?role.		?role a :DirectorRole. 		?activity prov:qualifiedAssociation ?role.		?programme prov:wasInfluencedBy ?activity.		?genre :nameGenre \""+ genere + "\"^^xsd:string.		?programme :hasSeries ?series.		?series :hasEpisode ?episode.		?episode :hasGenre ?genre.		?programme :ratingProgramme ?rating.	}    	GROUP BY ?director}    {SELECT ?director1 (SUM(?rating) AS ?sum2) 	WHERE {		?director1 a :Person.		?assoc prov:agent ?director1.		?assoc prov:hadRole ?role.		?role a :DirectorRole.		?activity prov:qualifiedAssociation ?role.		?programme prov:wasInfluencedBy ?activity.		?genre :nameGenre \""+ genere + "\"^^xsd:string.		?programme :hasSeries ?series.		?series :hasEpisode ?episode.		?episode :hasGenre ?genre.		?programme :ratingProgramme ?rating.	}    GROUP BY ?director1}     {?director rdfs:label ?label}FILTER (?sum>?sum2)}";
+    console.log(query);
     $.ajax(urlGRAPHDB, {headers:{ Accept: 'application/sparql-results+json'},data: { query: query }}).then(function (data) {
         var res = data;
         var registi = res.results.bindings;
@@ -364,7 +365,7 @@ function requestQ8(genere){
                 "            ?role a :ActorRole.  " +
                 "            ?activity prov:qualifiedAssociation ?role.   " +
                 "            ?episode prov:wasInfluencedBy ?activity. " +
-                "            ?genre :nameGenre \"Commedia\"^^xsd:string. " +
+                "            ?genre :nameGenre \"" + genere +"\"^^xsd:string. " +
                 "            ?episode :hasGenre ?genre. " +
                 "            ?episode a :Episode " +
                 "        } " +
@@ -381,7 +382,7 @@ function requestQ8(genere){
                 "            ?role a :ActorRole.  " +
                 "            ?activity prov:qualifiedAssociation ?role.   " +
                 "            ?episode prov:wasInfluencedBy ?activity. " +
-                "            ?genre :nameGenre \"Commedia\"^^xsd:string. " +
+                "            ?genre :nameGenre \"" + genere +"\"^^xsd:string. " +
                 "            ?episode :hasGenre ?genre. " +
                 "            ?episode a :Episode " +
                 "        	} " +
