@@ -16,22 +16,7 @@ $(document).ready(function() {
         else $("#data").show();
     });
     
-    //Selezione su dropdown
-    /*$("body").on('click', '#dropdownGeneri option a', function () {
-        /*if($("#q7").is(":visible"))
-            requestQ7(this.id);
-        if($("#q9").is(":visible"))
-            requestQ9(this.text);
-        if($("#q10").is(":visible"))
-            requestQ10(this.text);
-        if($("#q5").is(":visible"))
-            requestQ5(this.text);
-        if($("#q8").is(":visible"))
-            requestQ8(this.text);
-        alert(this.text);
-    });*/
-    
-    
+    //Selezione di un genere, inserisco attori, registi e programmi collegati
     $("#dropdownGeneri").on('change', function (e) {
         var optionSelected = $("option:selected", this);
         var valueSelected = this.value;
@@ -48,6 +33,7 @@ $(document).ready(function() {
         loadProgrammi(valueSelected);
     });
     
+    //Selezione attore, visualizzo i dati
     $("#dropdownAttori").on('change', function (e) {
         var optionSelected = $("option:selected", this);
         var valueSelected = this.value;
@@ -62,6 +48,7 @@ $(document).ready(function() {
         $("#dropdownProgrammi").val("");
     });
     
+    //Selezione di un regista, visualizzo i dati
     $("#dropdownRegisti").on('change', function (e) {
         var optionSelected = $("option:selected", this);
         var valueSelected = this.value;
@@ -76,6 +63,7 @@ $(document).ready(function() {
         $("#dropdownProgrammi").val("");
     });
     
+    //Selezione di un programma, visualizzo i dati e carico gli episodi
     $("#dropdownProgrammi").on('change', function (e) {
         var optionSelected = $("option:selected", this);
         var valueSelected = this.value;

@@ -1,5 +1,4 @@
 //URL richieste Graphdb
-//var urlGRAPHDB = 'http://localhost:8000/repositories/raiontology';
 var urlGRAPHDB = 'http://localhost:7200/repositories/raiontology';
 var prefixes = [
     "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
@@ -41,13 +40,14 @@ $(document).ready(function() {
     });
     
     
+    //Inserimento prefissi nell'area per le query
     for (var i = 0; i < prefixes.length; i++) {
         $("#txtSparqlQuery").text($("#txtSparqlQuery").text() + prefixes[i] + "\r\n");
-    //console.log($("#txtSparqlQuery").html());
     }
 
 });
 
+//Invio request a wikidata per link ad un entity di cui viene passata la label
 function requestWikidata(label){
     var base = "https://query.wikidata.org/sparql?query=";
     var endpointUrl = "SELECT ?item WHERE {?item rdfs:label \""+ label + "\"@it.}",
@@ -70,6 +70,7 @@ function requestWikidata(label){
     });
 }
 
+//Invio request a DBPedia
 function requestDbPedia(label){
     //sparql query
     var query = [
